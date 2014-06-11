@@ -21,7 +21,6 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/doug/turnhttp"
@@ -39,7 +38,6 @@ var (
 	rate       time.Duration
 	domainList []string
 	uris       []string
-	mutex      = new(sync.Mutex)
 )
 
 func update(url string, ptr interface{}) error {
@@ -48,9 +46,7 @@ func update(url string, ptr interface{}) error {
 		return err
 	}
 	decoder := json.NewDecoder(resp.Body)
-	mutex.Lock()
 	err = decoder.Decode(ptr)
-	mutex.Unlock()
 	return err
 }
 

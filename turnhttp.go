@@ -52,7 +52,7 @@ func (self *Service) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	origin := r.URL.Host
+	origin := r.Host
 	for _, domain := range self.Domains {
 		if origin == domain {
 			goto ACCEPT
