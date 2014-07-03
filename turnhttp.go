@@ -55,21 +55,20 @@ func (self *Service) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	origin := r.Host
 	for _, domain := range self.Domains {
 		if origin == domain {
-			goto ACCEPT
+			user, pass := credentials(username, self.Secret)
+			resp := TurnResponse{
+				Username: user,
+				Password: pass,
+				Uris:     self.Uris,
+			}
+
+			rw.Header().Set("Content-Type", "application/json")
+			enc := json.NewEncoder(rw)
+			enc.Encode(resp)
+			return
 		}
 	}
 	http.Error(rw, "Invalid host.", http.StatusBadRequest)
 	return
 
-ACCEPT:
-	user, pass := credentials(username, self.Secret)
-	resp := TurnResponse{
-		Username: user,
-		Password: pass,
-		Uris:     self.Uris,
-	}
-
-	rw.Header().Set("Content-Type", "application/json")
-	enc := json.NewEncoder(rw)
-	enc.Encode(resp)
 }
