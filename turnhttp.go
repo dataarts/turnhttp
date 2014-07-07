@@ -63,7 +63,7 @@ func (self *Service) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 			}
 
 			rw.Header().Set("Content-Type", "application/json")
-			o := r.Header().Get("Origin")
+			o := r.Header.Get("Origin")
 			if o != "" {
 				rw.Header().Set("Access-Control-Allow-Origin", o)
 			}
