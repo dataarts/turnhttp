@@ -63,6 +63,7 @@ func (self *Service) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 			}
 
 			rw.Header().Set("Content-Type", "application/json")
+			rw.Header().Set("Access-Control-Allow-Origin", origin)
 			enc := json.NewEncoder(rw)
 			enc.Encode(resp)
 			return
