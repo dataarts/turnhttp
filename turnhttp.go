@@ -52,7 +52,7 @@ func (self *Service) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	origin := r.Host
+	origin := r.Header.Get("Origin")
 	for _, domain := range self.Domains {
 		if origin == domain {
 			user, pass := credentials(username, self.Secret)
@@ -63,7 +63,7 @@ func (self *Service) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 			}
 
 			rw.Header().Set("Content-Type", "application/json")
-			rw.Header().Set("Access-Control-Allow-Origin", "*")
+			rw.Header().Set("Access-Control-Allow-Origin", origin)
 			rw.Header().Set("Access-Control-Allow-Methods", "GET")
 			rw.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token")
 			rw.Header().Set("Access-Control-Allow-Credentials", "true")
