@@ -80,7 +80,7 @@ func main() {
 	}
 
 	if *serversUrl != "" {
-		go synchronize(*serversUrl, &turn.Uris)
+		go synchronize(*serversUrl, &turn.Urls)
 	}
 	if *domainsUrl != "" {
 		go synchronize(*domainsUrl, &turn.Domains)
