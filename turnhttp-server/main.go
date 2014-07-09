@@ -29,7 +29,7 @@ import (
 var (
 	port       = flag.String("port", "8080", "port to run on")
 	servers    = flag.String("servers", "", "comma seperated list of turn server IPs")
-	serversUrl = flag.String("servers-url", "", "json resource returning list of turn server urls")
+	serversUrl = flag.String("servers-url", "", "json resource returning list of turn server uris")
 	domains    = flag.String("domains", "", "comma seperated list of acceptable domains")
 	domainsUrl = flag.String("domains-url", "", "json resource returning list of acceptable domains")
 	secret     = flag.String("secret", "notasecret", "shared secret to use")
@@ -37,7 +37,7 @@ var (
 	rateString = flag.String("rate", "30s", "rate of url updating e.g. 30s or 1m15s")
 	rate       time.Duration
 	domainList []string
-	urls       []string
+	uris       []string
 )
 
 func update(url string, ptr interface{}) error {
@@ -66,21 +66,21 @@ func main() {
 		panic(err)
 	}
 	for _, ip := range strings.Split(*servers, ",") {
-		urls = append(urls, fmt.Sprintf("turn:%s:3478?transport=udp", ip))
-		urls = append(urls, fmt.Sprintf("turn:%s:3478?transport=tcp", ip))
-		urls = append(urls, fmt.Sprintf("turn:%s:3479?transport=udp", ip))
-		urls = append(urls, fmt.Sprintf("turn:%s:3479?transport=tcp", ip))
+		uris = append(uris, fmt.Sprintf("turn:%s:3478?transport=udp", ip))
+		uris = append(uris, fmt.Sprintf("turn:%s:3478?transport=tcp", ip))
+		uris = append(uris, fmt.Sprintf("turn:%s:3479?transport=udp", ip))
+		uris = append(uris, fmt.Sprintf("turn:%s:3479?transport=tcp", ip))
 	}
 	domainList = strings.Split(*domains, ",")
 
 	turn := &turnhttp.Service{
 		Secret:  *secret,
-		Urls:    urls,
+		Uris:    uris,
 		Domains: domainList,
 	}
 
 	if *serversUrl != "" {
-		go synchronize(*serversUrl, &turn.Urls)
+		go synchronize(*serversUrl, &turn.Uris)
 	}
 	if *domainsUrl != "" {
 		go synchronize(*domainsUrl, &turn.Domains)
