@@ -36,7 +36,7 @@ func credentials(username, secret string) (user, pass string) {
 type TurnResponse struct {
 	Username string   `json:"username"`
 	Password string   `json:"password"`
-	Uris     []string `json:"urls"`
+	Uris     []string `json:"uris"`
 	TTL      int      `json:"ttl"`
 }
 
@@ -44,7 +44,7 @@ type Service struct {
 	Hosts  []string
 	Secret string
 	Uris   []string
-	TTL    int
+	TTL    time.Duration
 }
 
 func (self *Service) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
@@ -78,6 +78,7 @@ SUCCESS:
 		Username: user,
 		Password: pass,
 		Uris:     self.Uris,
+		TTL:      int(self.TTL.Seconds()),
 	}
 	rw.Header().Set("Content-Type", "application/json")
 	enc := json.NewEncoder(rw)

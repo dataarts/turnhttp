@@ -35,9 +35,11 @@ var (
 	secret     = flag.String("secret", "notasecret", "shared secret to use")
 	secretUrl  = flag.String("secret-url", "", "json resource returning shared secret to use")
 	rateString = flag.String("rate", "30s", "rate of url updating e.g. 30s or 1m15s")
+	ttlString  = flag.String("ttl", "1d", "ttl of credential e.g. 1d or 24h")
 	rate       time.Duration
 	hostList   []string
 	uris       []string
+	ttl        time.Duration
 )
 
 func update(url string, ptr interface{}) error {
@@ -65,6 +67,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	ttl, err = time.ParseDuration(*ttlString)
+	if err != nil {
+		panic(err)
+	}
 	for _, ip := range strings.Split(*servers, ",") {
 		uris = append(uris, fmt.Sprintf("turn:%s:3478?transport=udp", ip))
 		uris = append(uris, fmt.Sprintf("turn:%s:3478?transport=tcp", ip))
@@ -77,6 +83,7 @@ func main() {
 		Secret: *secret,
 		Uris:   uris,
 		Hosts:  hostList,
+		TTL:    ttl,
 	}
 
 	if *serversUrl != "" {
