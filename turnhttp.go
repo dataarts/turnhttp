@@ -41,10 +41,10 @@ type TurnResponse struct {
 }
 
 type Service struct {
-	Domains []string
-	Secret  string
-	Uris    []string
-	TTL     int
+	Hosts  []string
+	Secret string
+	Uris   []string
+	TTL    int
 }
 
 func (self *Service) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
@@ -55,8 +55,8 @@ func (self *Service) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	origin := r.Header.Get("Origin")
-	for _, domain := range self.Domains {
-		if origin == domain {
+	for _, host := range self.Hosts {
+		if origin == host {
 			user, pass := credentials(username, self.Secret)
 			resp := TurnResponse{
 				Username: user,

@@ -30,13 +30,13 @@ var (
 	port       = flag.String("port", "8080", "port to run on")
 	servers    = flag.String("servers", "", "comma seperated list of turn server IPs")
 	serversUrl = flag.String("servers-url", "", "json resource returning list of turn server uris")
-	domains    = flag.String("domains", "", "comma seperated list of acceptable domains")
-	domainsUrl = flag.String("domains-url", "", "json resource returning list of acceptable domains")
+	hosts      = flag.String("hosts", "", "comma seperated list of acceptable hosts")
+	hostsUrl   = flag.String("hosts-url", "", "json resource returning list of acceptable hosts")
 	secret     = flag.String("secret", "notasecret", "shared secret to use")
 	secretUrl  = flag.String("secret-url", "", "json resource returning shared secret to use")
 	rateString = flag.String("rate", "30s", "rate of url updating e.g. 30s or 1m15s")
 	rate       time.Duration
-	domainList []string
+	hostList   []string
 	uris       []string
 )
 
@@ -71,19 +71,19 @@ func main() {
 		uris = append(uris, fmt.Sprintf("turn:%s:3479?transport=udp", ip))
 		uris = append(uris, fmt.Sprintf("turn:%s:3479?transport=tcp", ip))
 	}
-	domainList = strings.Split(*domains, ",")
+	hostList = strings.Split(*hosts, ",")
 
 	turn := &turnhttp.Service{
-		Secret:  *secret,
-		Uris:    uris,
-		Domains: domainList,
+		Secret: *secret,
+		Uris:   uris,
+		Hosts:  hostList,
 	}
 
 	if *serversUrl != "" {
 		go synchronize(*serversUrl, &turn.Uris)
 	}
-	if *domainsUrl != "" {
-		go synchronize(*domainsUrl, &turn.Domains)
+	if *hostsUrl != "" {
+		go synchronize(*hostsUrl, &turn.Domains)
 	}
 	if *secretUrl != "" {
 		go synchronize(*secretUrl, &turn.Secret)
