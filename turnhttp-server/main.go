@@ -35,7 +35,7 @@ var (
 	secret     = flag.String("secret", "notasecret", "shared secret to use")
 	secretUrl  = flag.String("secret-url", "", "json resource returning shared secret to use")
 	rateString = flag.String("rate", "30s", "rate of url updating e.g. 30s or 1m15s")
-	ttlString  = flag.String("ttl", "1d", "ttl of credential e.g. 1d or 24h")
+	ttlString  = flag.String("ttl", "24h", "ttl of credential e.g. 24h33m5s")
 	rate       time.Duration
 	hostList   []string
 	uris       []string
