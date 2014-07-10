@@ -55,26 +55,32 @@ func (self *Service) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	origin := r.Header.Get("Origin")
+	// skip cors if accessing directly
+	if origin == "" {
+		goto SUCCESS
+	}
 	for _, host := range self.Hosts {
 		if origin == host {
-			user, pass := credentials(username, self.Secret)
-			resp := TurnResponse{
-				Username: user,
-				Password: pass,
-				Uris:     self.Uris,
-			}
-
-			rw.Header().Set("Content-Type", "application/json")
 			rw.Header().Set("Access-Control-Allow-Origin", origin)
 			rw.Header().Set("Access-Control-Allow-Methods", "GET")
 			rw.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token")
 			rw.Header().Set("Access-Control-Allow-Credentials", "true")
-			enc := json.NewEncoder(rw)
-			enc.Encode(resp)
-			return
+			goto SUCCESS
 		}
 	}
+	// fail if invalid origin
 	http.Error(rw, "Invalid host.", http.StatusBadRequest)
 	return
+
+SUCCESS:
+	user, pass := credentials(username, self.Secret)
+	resp := TurnResponse{
+		Username: user,
+		Password: pass,
+		Uris:     self.Uris,
+	}
+	rw.Header().Set("Content-Type", "application/json")
+	enc := json.NewEncoder(rw)
+	enc.Encode(resp)
 
 }
