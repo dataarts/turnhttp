@@ -32,8 +32,9 @@ var (
 	serversUrl = flag.String("servers-url", "", "json resource returning list of turn server uris")
 	hosts      = flag.String("hosts", "", "comma seperated list of acceptable hosts")
 	hostsUrl   = flag.String("hosts-url", "", "json resource returning list of acceptable hosts")
-	secret     = flag.String("secret", "notasecret", "shared secret to use")
+	secret     = flag.String("secret", "notasecret", "shared secret to use XOR(redis,secret)")
 	secretUrl  = flag.String("secret-url", "", "json resource returning shared secret to use")
+	redis      = flag.String("redis", "", "Redis connection settings XOR(redis,secret)")
 	rateString = flag.String("rate", "30s", "rate of url updating e.g. 30s or 1m15s")
 	ttlString  = flag.String("ttl", "24h", "ttl of credential e.g. 24h33m5s")
 	rate       time.Duration
