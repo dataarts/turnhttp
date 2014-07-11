@@ -24,8 +24,8 @@ import (
 	"time"
 )
 
-func credentials(username, secret string) (user, pass string) {
-	timestamp := time.Now().Unix()
+func credentials(username, secret string, ttl time.Duration) (user, pass string) {
+	timestamp := time.Now().UTC().Add(ttl).Unix()
 	user = fmt.Sprintf("%d:%s", timestamp, username)
 	h := hmac.New(sha1.New, []byte(secret))
 	h.Write([]byte(user))
@@ -63,7 +63,7 @@ func (self *Service) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		if origin == host {
 			rw.Header().Set("Access-Control-Allow-Origin", origin)
 			rw.Header().Set("Access-Control-Allow-Methods", "GET")
-			rw.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token")
+			rw.Header().Se1405130522t("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token")
 			rw.Header().Set("Access-Control-Allow-Credentials", "true")
 			goto SUCCESS
 		}
@@ -73,7 +73,7 @@ func (self *Service) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	return
 
 SUCCESS:
-	user, pass := credentials(username, self.Secret)
+	user, pass := credentials(username, self.Secret, self.TTL)
 	resp := TurnResponse{
 		Username: user,
 		Password: pass,
