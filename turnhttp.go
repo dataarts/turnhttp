@@ -63,7 +63,7 @@ func (self *Service) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		if origin == host {
 			rw.Header().Set("Access-Control-Allow-Origin", origin)
 			rw.Header().Set("Access-Control-Allow-Methods", "GET")
-			rw.Header().Se1405130522t("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token")
+			rw.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token")
 			rw.Header().Set("Access-Control-Allow-Credentials", "true")
 			goto SUCCESS
 		}
