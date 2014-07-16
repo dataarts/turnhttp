@@ -15,7 +15,7 @@
 package main
 
 import (
-	"encoding/json"
+	"crypto/rand"
 	"flag"
 	"fmt"
 	"log"
@@ -24,39 +24,52 @@ import (
 	"time"
 
 	"github.com/doug/turnhttp"
+	"github.com/garyburd/redigo/redis"
 )
 
 var (
 	port       = flag.String("port", "8080", "port to run on")
 	servers    = flag.String("servers", "", "comma seperated list of turn server IPs")
-	serversUrl = flag.String("servers-url", "", "json resource returning list of turn server uris")
 	hosts      = flag.String("hosts", "", "comma seperated list of acceptable hosts")
-	hostsUrl   = flag.String("hosts-url", "", "json resource returning list of acceptable hosts")
 	secret     = flag.String("secret", "notasecret", "shared secret to use XOR(redis,secret)")
-	secretUrl  = flag.String("secret-url", "", "json resource returning shared secret to use")
-	redis      = flag.String("redis", "", "Redis connection settings XOR(redis,secret)")
+	redisAddr  = flag.String("redis", "", "Redis connection settings XOR(redis,secret)")
 	rateString = flag.String("rate", "30s", "rate of url updating e.g. 30s or 1m15s")
 	ttlString  = flag.String("ttl", "24h", "ttl of credential e.g. 24h33m5s")
 	rate       time.Duration
 	hostList   []string
 	uris       []string
 	ttl        time.Duration
+	currentKey = key1
+	conn       redis.Conn
 )
 
-func update(url string, ptr interface{}) error {
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
+const (
+	key1 = "a"
+	key2 = "b"
+)
+
+func randString(n int) string {
+	const alphanum = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+	var bytes = make([]byte, n)
+	rand.Read(bytes)
+	for i, b := range bytes {
+		bytes[i] = alphanum[b%byte(len(alphanum))]
 	}
-	decoder := json.NewDecoder(resp.Body)
-	err = decoder.Decode(ptr)
-	return err
+	return string(bytes)
 }
 
-func synchronize(url string, ptr interface{}) {
+func updateSecret() {
 	for {
-		update(url, ptr)
-		time.Sleep(rate)
+		*secret = randString(10)
+		key := fmt.Sprintf("turn/secret/%d", time.Now().Unix())
+		//expire := (48 * time.Hour).Seconds()
+		expire := (10 * time.Second).Seconds()
+		_, err := conn.Do("SETEX", key, expire, *secret)
+		if err != nil {
+			fmt.Println(err)
+		}
+		//time.Sleep(24 * time.Hour)
+		time.Sleep(1 * time.Second)
 	}
 }
 
@@ -80,21 +93,24 @@ func main() {
 	}
 	hostList = strings.Split(*hosts, ",")
 
+	// if redis is enabled hash the current day into A, B
+	// set based on even or odd day since epoc
+	// once a day update
+	// serve the current update the old
+	if *redisAddr != "" {
+		conn, err = redis.Dial("tcp", *redisAddr)
+		if err != nil {
+			panic(err)
+		}
+		// inital add
+		go updateSecret()
+	}
+
 	turn := &turnhttp.Service{
-		Secret: *secret,
+		Secret: secret,
 		Uris:   uris,
 		Hosts:  hostList,
 		TTL:    ttl,
-	}
-
-	if *serversUrl != "" {
-		go synchronize(*serversUrl, &turn.Uris)
-	}
-	if *hostsUrl != "" {
-		go synchronize(*hostsUrl, &turn.Hosts)
-	}
-	if *secretUrl != "" {
-		go synchronize(*secretUrl, &turn.Secret)
 	}
 
 	http.Handle("/", turn)
