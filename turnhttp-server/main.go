@@ -15,7 +15,6 @@
 package main
 
 import (
-	"crypto/rand"
 	"flag"
 	"fmt"
 	"log"
@@ -33,45 +32,14 @@ var (
 	hosts      = flag.String("hosts", "", "comma seperated list of acceptable hosts")
 	secret     = flag.String("secret", "notasecret", "shared secret to use XOR(redis,secret)")
 	redisAddr  = flag.String("redis", "", "Redis connection settings XOR(redis,secret)")
-	rateString = flag.String("rate", "30s", "rate of url updating e.g. 30s or 1m15s")
+	rateString = flag.String("rate", "30s", "rate of updating from redis e.g. 30s or 1m15s")
 	ttlString  = flag.String("ttl", "24h", "ttl of credential e.g. 24h33m5s")
 	rate       time.Duration
 	hostList   []string
 	uris       []string
 	ttl        time.Duration
-	currentKey = key1
 	conn       redis.Conn
 )
-
-const (
-	key1 = "a"
-	key2 = "b"
-)
-
-func randString(n int) string {
-	const alphanum = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-	var bytes = make([]byte, n)
-	rand.Read(bytes)
-	for i, b := range bytes {
-		bytes[i] = alphanum[b%byte(len(alphanum))]
-	}
-	return string(bytes)
-}
-
-func updateSecret() {
-	for {
-		*secret = randString(10)
-		key := fmt.Sprintf("turn/secret/%d", time.Now().Unix())
-		//expire := (48 * time.Hour).Seconds()
-		expire := (10 * time.Second).Seconds()
-		_, err := conn.Do("SETEX", key, expire, *secret)
-		if err != nil {
-			fmt.Println(err)
-		}
-		//time.Sleep(24 * time.Hour)
-		time.Sleep(1 * time.Second)
-	}
-}
 
 // run a server
 func main() {
@@ -102,8 +70,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		// inital add
-		go updateSecret()
+		// inital get setting
 	}
 
 	turn := &turnhttp.Service{
