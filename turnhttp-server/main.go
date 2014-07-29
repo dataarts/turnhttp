@@ -27,28 +27,22 @@ import (
 )
 
 var (
-	port       = flag.String("port", "8080", "port to run on")
-	servers    = flag.String("servers", "", "comma seperated list of turn server IPs")
-	hosts      = flag.String("hosts", "", "comma seperated list of acceptable hosts")
-	secret     = flag.String("secret", "notasecret", "shared secret to use XOR(redis,secret)")
-	redisAddr  = flag.String("redis", "", "Redis connection settings XOR(redis,secret)")
-	rateString = flag.String("rate", "30s", "rate of updating from redis e.g. 30s or 1m15s")
-	ttlString  = flag.String("ttl", "24h", "ttl of credential e.g. 24h33m5s")
-	rate       time.Duration
-	hostList   []string
-	uris       []string
-	ttl        time.Duration
-	conn       redis.Conn
+	port      = flag.String("port", "8080", "port to run on")
+	servers   = flag.String("servers", "", "comma seperated list of turn server IPs")
+	hosts     = flag.String("hosts", "", "comma seperated list of acceptable hosts")
+	secret    = flag.String("secret", "notasecret", "shared secret to use XOR(redis,secret)")
+	redisAddr = flag.String("redis", "", "Redis connection settings XOR(redis,secret)")
+	ttlString = flag.String("ttl", "24h", "ttl of credential e.g. 24h33m5s")
+	hostList  []string
+	uris      []string
+	ttl       time.Duration
+	conn      redis.Conn
 )
 
 // run a server
 func main() {
 	flag.Parse()
 	var err error
-	rate, err = time.ParseDuration(*rateString)
-	if err != nil {
-		panic(err)
-	}
 	ttl, err = time.ParseDuration(*ttlString)
 	if err != nil {
 		panic(err)

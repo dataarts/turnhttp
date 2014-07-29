@@ -24,10 +24,10 @@ import (
 )
 
 var (
-	redisAddr  = flag.String("redis", "", "Redis connection settings XOR(redis,secret)")
-	rateString = flag.String("rate", "24h", "rate of url updating e.g. 30s or 1m15s")
-	rate       time.Duration
-	conn       redis.Conn
+	redisAddr = flag.String("redis", "", "Redis connection settings XOR(redis,secret)")
+	ttlString = flag.String("ttl", "24h", "rate of url updating e.g. 30s or 1m15s")
+	ttl       time.Duration
+	conn      redis.Conn
 )
 
 func randString(n int) string {
@@ -44,19 +44,19 @@ func updateSecret() {
 	for {
 		secret := randString(10)
 		key := fmt.Sprintf("turn/secret/%d", time.Now().Unix())
-		expire := (rate * 2).Seconds()
+		expire := (ttl * 2).Seconds()
 		_, err := conn.Do("SETEX", key, expire, secret)
 		if err != nil {
 			fmt.Println(err)
 		}
-		time.Sleep(rate)
+		time.Sleep(ttl)
 	}
 }
 
 func main() {
 	flag.Parse()
 	var err error
-	rate, err = time.ParseDuration(*rateString)
+	ttl, err = time.ParseDuration(*ttlString)
 	if err != nil {
 		panic(err)
 	}
