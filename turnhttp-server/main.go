@@ -65,6 +65,25 @@ func main() {
 			panic(err)
 		}
 		// inital get setting
+		updateSecret := func() {
+			keys, err := conn.Do("KEYS", "turn/secret/*")
+			if err != nil {
+				panic(err)
+			}
+			items, err := conn.Do("MGET", keys...)
+			if err != nil {
+				panic(err)
+			}
+			fmt.Println(items)
+		}
+		updateSecret()
+		go func() {
+			for {
+				// listen for changes and update secret
+				updateSecret()
+				time.sleep()
+			}
+		}()
 	}
 
 	turn := &turnhttp.Service{
