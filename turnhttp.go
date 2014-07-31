@@ -42,7 +42,7 @@ type TurnResponse struct {
 
 type Service struct {
 	Hosts  []string
-	Secret *string // secret is a pointer so that something else can update it
+	Secret string
 	Uris   []string
 	TTL    time.Duration
 }
@@ -73,7 +73,7 @@ func (self *Service) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	return
 
 SUCCESS:
-	user, pass := credentials(username, *self.Secret, self.TTL)
+	user, pass := credentials(username, self.Secret, self.TTL)
 	resp := TurnResponse{
 		Username: user,
 		Password: pass,

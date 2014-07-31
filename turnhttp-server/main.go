@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
@@ -27,23 +28,66 @@ import (
 )
 
 var (
-	port      = flag.String("port", "8080", "port to run on")
-	servers   = flag.String("servers", "", "comma seperated list of turn server IPs")
-	hosts     = flag.String("hosts", "", "comma seperated list of acceptable hosts")
-	secret    = flag.String("secret", "notasecret", "shared secret to use XOR(redis,secret)")
-	redisAddr = flag.String("redis", "", "Redis connection settings XOR(redis,secret)")
-	ttlString = flag.String("ttl", "24h", "ttl of credential e.g. 24h33m5s")
-	hostList  []string
-	uris      []string
-	ttl       time.Duration
-	conn      redis.Conn
+	port       = flag.String("port", "8080", "port to run on")
+	servers    = flag.String("servers", "", "comma seperated list of turn server IPs")
+	hosts      = flag.String("hosts", "", "comma seperated list of acceptable hosts")
+	secret     = flag.String("secret", "", "shared secret to use")
+	redisAddr  = flag.String("redis", "", "Redis connection settings, if secret or hosts is not provided it will try and fetch it from redis with KEYS 'turn/secret/*' and SMEMBERS 'turn/hosts'.")
+	ttlString  = flag.String("ttl", "24h", "ttl of credential e.g. 24h33m5s")
+	rateString = flag.String("rate", "5m", "Rate at which to pole the redis server.")
+
+	turn     *turnhttp.Service
+	conn     redis.Conn
+	hostList []string
+	uris     []string
+	ttl      time.Duration
+	rate     time.Duration
 )
+
+func updateSecret() {
+	values, err := redis.Values(conn.Do("KEYS", "turn/secret/*"))
+	if err != nil {
+		panic(err)
+	}
+	var keys []string
+	if err := redis.ScanSlice(values, &keys); err != nil {
+		panic(err)
+	}
+
+	if len(keys) == 0 {
+		return
+	}
+
+	sort.Sort(sort.StringSlice(keys))
+	key := keys[0]
+	item, err := redis.String(conn.Do("GET", key))
+	if err != nil {
+		panic(err)
+	}
+	turn.Secret = item
+}
+
+func updateHosts() {
+	values, err := redis.Values(conn.Do("SMEMBERS", "turn/hosts"))
+	if err != nil {
+		panic(err)
+	}
+	var hosts []string
+	if err := redis.ScanSlice(values, &hosts); err != nil {
+		panic(err)
+	}
+	turn.Hosts = hosts
+}
 
 // run a server
 func main() {
 	flag.Parse()
 	var err error
 	ttl, err = time.ParseDuration(*ttlString)
+	if err != nil {
+		panic(err)
+	}
+	rate, err = time.ParseDuration(*rateString)
 	if err != nil {
 		panic(err)
 	}
@@ -65,29 +109,22 @@ func main() {
 			panic(err)
 		}
 		// inital get setting
-		updateSecret := func() {
-			keys, err := conn.Do("KEYS", "turn/secret/*")
-			if err != nil {
-				panic(err)
-			}
-			items, err := conn.Do("MGET", keys...)
-			if err != nil {
-				panic(err)
-			}
-			fmt.Println(items)
-		}
-		updateSecret()
 		go func() {
 			for {
 				// listen for changes and update secret
-				updateSecret()
-				time.sleep()
+				if *secret == "" {
+					updateSecret()
+				}
+				if *hosts == "" {
+					updateHosts()
+				}
+				time.Sleep(rate)
 			}
 		}()
 	}
 
-	turn := &turnhttp.Service{
-		Secret: secret,
+	turn = &turnhttp.Service{
+		Secret: *secret,
 		Uris:   uris,
 		Hosts:  hostList,
 		TTL:    ttl,
