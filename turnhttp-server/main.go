@@ -29,12 +29,12 @@ import (
 
 var (
 	port       = flag.String("port", "8080", "port to run on")
-	servers    = flag.String("servers", "", "comma seperated list of turn server IPs")
-	hosts      = flag.String("hosts", "", "comma seperated list of acceptable hosts")
+	servers    = flag.String("servers", "", "comma seperated list of turn server IPs e.g. 192.168.1.1,10.8.0.1")
+	hosts      = flag.String("hosts", "", "comma seperated list of acceptable hosts e.g. http://www.google.com,https://www.google.com")
 	secret     = flag.String("secret", "", "shared secret to use")
 	redisAddr  = flag.String("redis", "", "Redis connection settings, if secret or hosts is not provided it will try and fetch it from redis with KEYS 'turn/secret/*' and SMEMBERS 'turn/hosts'.")
 	ttlString  = flag.String("ttl", "24h", "ttl of credential e.g. 24h33m5s")
-	rateString = flag.String("rate", "5m", "Rate at which to pole the redis server.")
+	rateString = flag.String("rate", "5m", "Rate at which to pole the redis server if applicable.")
 
 	turn     *turnhttp.Service
 	conn     redis.Conn
