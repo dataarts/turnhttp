@@ -99,10 +99,6 @@ func main() {
 	}
 	hostList = strings.Split(*hosts, ",")
 
-	// if redis is enabled hash the current day into A, B
-	// set based on even or odd day since epoc
-	// once a day update
-	// serve the current update the old
 	if *redisAddr != "" {
 		conn, err = redis.Dial("tcp", *redisAddr)
 		if err != nil {
