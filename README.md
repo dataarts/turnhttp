@@ -1,7 +1,7 @@
 turnhttp
 ========
 
-turn credential server for webrtc
+TURN REST API credential server for webrtc
 
 
 `go get github.com/doug/turnhttp/turnhttp-server`
