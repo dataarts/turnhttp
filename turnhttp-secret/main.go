@@ -42,7 +42,7 @@ func randString(n int) string {
 
 func updateSecret() {
 	for {
-		secret := randString(10)
+		secret := randString(15)
 		key := fmt.Sprintf("turn/secret/%d", time.Now().Unix())
 		expire := (ttl * 2).Seconds()
 		_, err := conn.Do("SETEX", key, expire, secret)
