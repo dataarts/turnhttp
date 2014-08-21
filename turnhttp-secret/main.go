@@ -24,8 +24,8 @@ import (
 )
 
 var (
-	redisAddr = flag.String("redis", "", "Redis connection settings XOR(redis,secret)")
-	ttlString = flag.String("ttl", "24h", "rate of url updating e.g. 30s or 1m15s")
+	redisAddr = flag.String("redis", "", "Redis connection settings.")
+	ttlString = flag.String("ttl", "24h", "Rate of url updating e.g. 30s or 1m15s")
 	ttl       time.Duration
 	conn      redis.Conn
 )
