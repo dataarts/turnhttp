@@ -23,7 +23,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/doug/turnhttp"
+	"github.com/dataarts/turnhttp"
 	"github.com/garyburd/redigo/redis"
 )
 
